@@ -1,0 +1,27 @@
+.championed-days-row {
+  margin: 2rem auto;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+
+  .championed-day {
+    display: grid;
+
+    a {
+      text-align: center;
+      color: black;
+      text-decoration: none;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      background-color: #FCBB09;
+      border-radius: 8px;
+      padding: 1rem 4rem;
+    }
+
+    img {
+      width: 220px;
+      display: block;
+      margin: 0 auto;
+    }
+  }
+}

@@ -6,6 +6,7 @@ import SeriesFinder from "./SeriesFinder.jsx";
 import SeriesDetails from "./SeriesDetails.jsx";
 import SermonPlayer from "./SermonPlayer.jsx";
 import FeaturedEvents from "./FeaturedEvents.jsx";
+import WpadChampionDays from "./WpadChampionDays.jsx";
 
 export default [
   {
@@ -39,6 +40,10 @@ export default [
   {
     name: "phc-featured-events",
     Component: FeaturedEvents
+  },
+  {
+    name: "phc-wpad-champion-days",
+    Component: WpadChampionDays
   },
 
 ]

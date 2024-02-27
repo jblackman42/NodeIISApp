@@ -1,4 +1,5 @@
 const express = require("express");
+const QRCode = require('qrcode');
 const router = express.Router();
 
 const MinistryPlatformAPI = require("ministry-platform-api-wrapper");
@@ -27,6 +28,26 @@ router.post("/", checkAuthorizedOrigin, async (req, res) => {
     res.status(500).send("Internal server error");
   }
 })
+
+router.get('/generate-qrcode', checkAuthorizedOrigin, (req, res) => {
+  const { url } = req.query;
+
+  // Check if the URL is provided
+  if (!url) {
+    return res.status(400).send({ error: 'URL is required' });
+  }
+
+  // Generate QR code
+  QRCode.toDataURL(url, (err, src) => {
+    if (err) {
+      return res.status(500).send({ error: 'Failed to generate QR code' });
+    }
+
+    // Send QR code as an image
+    res.type('image/png');
+    res.send(Buffer.from(src.split(',')[1], 'base64'));
+  });
+});
 
 // SERMON SERIES/FINDER WIDGETS
 router.get("/series", async (req, res) => {

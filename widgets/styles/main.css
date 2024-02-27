@@ -763,4 +763,28 @@ phc-sermon-player .other-sermons a .sermon-image-overlay p {
     transform: translateY(0);
     color: white;
   }
+}
+.championed-days-row {
+  margin: 2rem auto;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+.championed-days-row .championed-day {
+  display: grid;
+}
+.championed-days-row .championed-day a {
+  text-align: center;
+  color: black;
+  text-decoration: none;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  background-color: #FCBB09;
+  border-radius: 8px;
+  padding: 1rem 4rem;
+}
+.championed-days-row .championed-day img {
+  width: 220px;
+  display: block;
+  margin: 0 auto;
 }/*# sourceMappingURL=main.css.map */
