@@ -29,7 +29,7 @@ router.post("/", checkAuthorizedOrigin, async (req, res) => {
   }
 })
 
-router.get('/generate-qrcode', checkAuthorizedOrigin, (req, res) => {
+router.get('/generate-qrcode', (req, res) => {
   const { url } = req.query;
 
   // Check if the URL is provided
