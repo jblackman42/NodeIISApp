@@ -6,6 +6,7 @@ import SeriesFinder from "./SeriesFinder.jsx";
 import SeriesDetails from "./SeriesDetails.jsx";
 import SermonPlayer from "./SermonPlayer.jsx";
 import FeaturedEvents from "./FeaturedEvents.jsx";
+import PrayerLog from "./PrayerLog.jsx";
 import WpadChampionDays from "./WpadChampionDays.jsx";
 
 export default [
@@ -40,6 +41,10 @@ export default [
   {
     name: "phc-featured-events",
     Component: FeaturedEvents
+  },
+  {
+    name: "wpad-prayer-log",
+    Component: PrayerLog
   },
   {
     name: "phc-wpad-champion-days",
