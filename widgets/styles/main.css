@@ -787,4 +787,37 @@ phc-sermon-player .other-sermons a .sermon-image-overlay p {
   width: 220px;
   display: block;
   margin: 0 auto;
+}
+
+.wpad-table {
+  border-collapse: collapse;
+}
+.wpad-table tr:hover {
+  background-color: #fcbb09;
+}
+.wpad-table tr {
+  border-bottom: 1px solid #2c3e50;
+}
+.wpad-table tr:last-of-type {
+  border: none;
+}
+.wpad-table th {
+  background-color: #2e2d2b;
+  color: #f7f1e3;
+}
+.wpad-table th, .wpad-table td {
+  padding: 8px;
+  text-align: left;
+}
+.wpad-table .icon {
+  text-align: center;
+  cursor: pointer;
+}
+
+#table-wrapper {
+  width: -moz-max-content;
+  width: max-content;
+  margin: 2rem auto;
+  background-color: #FFF;
+  border: 1px solid #2c3e50;
 }/*# sourceMappingURL=main.css.map */

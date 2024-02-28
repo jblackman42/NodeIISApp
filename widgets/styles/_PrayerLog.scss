@@ -1,0 +1,29 @@
+.wpad-table {
+  border-collapse: collapse;
+  tr:hover {background-color: #fcbb09;}
+  tr {
+    border-bottom: 1px solid #2c3e50;
+    &:last-of-type {
+      border: none;
+    }
+  }
+  th {
+    background-color: #2e2d2b;
+    color: #f7f1e3;
+  }
+  th, td {
+    padding: 8px;
+    text-align: left;
+  }
+  .icon{
+    text-align: center;
+    cursor: pointer;
+  }
+}
+#table-wrapper {
+  // background-color: #f5eee3;
+  width: max-content;
+  margin: 2rem auto;
+  background-color: #FFF;
+  border: 1px solid #2c3e50;
+}
