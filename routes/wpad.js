@@ -10,10 +10,20 @@ const MinistryPlatformAPI = require('ministry-platform-api-wrapper');
 router.get('/mySchedules/:guid', async (req, res) => {
   try {
     const { guid } = req.params;
-    const data = await MinistryPlatformAPI.request('get', '/tables/Prayer_Schedules', {"$select":"Prayer_Schedules.Start_Date, Prayer_Schedules.First_Name, Prayer_Schedules.Last_Name, Prayer_Schedules.Phone,Prayer_Schedules.Prayer_Schedule_ID","$filter":`WPAD_User_ID_Table.[_User_GUID]='${guid}'`}, {});
+    const data = await MinistryPlatformAPI.request('get', '/tables/Prayer_Schedules', {"$select":"Prayer_Schedules.Start_Date, Prayer_Schedules.First_Name, Prayer_Schedules.Last_Name, Prayer_Schedules.Phone,Prayer_Schedules.Prayer_Schedule_ID, Prayer_Schedules._Prayer_Schedule_GUID","$filter":`WPAD_User_ID_Table.[_User_GUID]='${guid}' AND Prayer_Schedules.Cancelled = 0`}, {});
     res.send(data);
   } catch (error) {
     // console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
+
+router.delete("/mySchedules", async (req, res) => {
+  try {
+    const { guid, id } = req.body;
+    const data = await MinistryPlatformAPI.request('put', '/tables/Prayer_Schedules', {}, [{"Prayer_Schedule_ID":id,"_Prayer_Schedule_GUID":guid,"Cancelled":"true"}])
+    res.send(data);
+  } catch (error) {
     res.status(500).send("Internal server error");
   }
 })
