@@ -28,6 +28,16 @@ router.delete("/mySchedules", async (req, res) => {
   }
 })
 
+router.put("/mySchedules/update", async (req, res) => {
+  try {
+    const { updateData } = req.body;
+    const data = await MinistryPlatformAPI.request('put', '/tables/Prayer_Schedules', {}, [updateData])
+    res.send(data);
+  } catch (error) {
+    res.status(500).send("Internal server error");
+  }
+})
+
 router.get('/championedDays/:id', async (req, res) => {
   try {
     const { id } = req.params;
