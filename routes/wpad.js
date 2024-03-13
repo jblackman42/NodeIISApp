@@ -1,11 +1,66 @@
 const express = require('express');
 const router = express.Router();
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const MinistryPlatformAPI = require('ministry-platform-api-wrapper');
 
-// router.get('/getSchedules', async (req, res) => {
-//   await MinistryPlatformAPI.request('get', '/tables/Prayer_Schedules', {"$select":"Prayer_Schedule_ID, Prayer_Schedules.[Start_Date], Prayer_Schedules.[End_Date], Prayer_Schedules.[WPAD_Community_ID], WPAD_Community_ID_Table.[Community_Name]","$filter":`Prayer_Schedules.[Start_Date] BETWEEN '${startDate}' AND '${endDate}' AND Cancelled=0`,"$orderby":"Start_Date"}, {})
-// })
+const getWPADEmailTemplate = ({First_Name, DateString, TimeString, Dates}) => {
+  return `
+  <body style="margin: 0;padding: 0;font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
+    <div class="container" style="max-width: 768px;margin: 0 auto;background-color: #f1f2f6 !important;">
+      <div class="img-container" style="background-color: #2e2d2b !important;color: white;display: grid;place-items: center;font-size: 1.2rem;padding: 1rem;">
+        <img src="http://weprayallday.com/assets/final-logo-transparent.png" alt="We Pray All Day" style="width: 300px;max-width: 90%;margin: 0 auto;">
+      </div>
+      <p id="banner" style="background-image:url('https://www.pureheart.org/wp-content/uploads/2024/03/wpadyellow.png');background-repeat:repeat;width: 100%;color: black;margin: 0;padding: 1rem 0;text-align: center;text-transform: uppercase;font-weight: bold;">Thanks for signing up to pray</p>
+      <div class="content" style="max-width: 90%;margin: 0 auto;padding: 1rem;">
+        <p style="margin: 0;">Hi ${First_Name},</p><br>
+        <p style="margin: 0;">We are so honored that you would pray with us! We have high expectations that God is going to do immeasurably more than we could ever seek ask or imagine!</p><br>
+        <p style="margin: 0;">To help you remember your prayer time, add this to your calendar! It's simple all you gotta do is click it and accept</p><br>
+        <p style="text-align: center;margin: 0;">${TimeString}</p>
+        <div class="date-info" style="width: max-content;margin: 0 auto;">
+          <p style="margin: 0;">${DateString}</p>
+        </div><br>
+        <div class="btn-container" style="width: 100%;display: flex;justify-content: center;">
+          <a href="${process.env.DOMAIN_NAME}/calendar-invite/?dates=${Dates.toString()}" target="_blank" style="background-image:url('https://www.pureheart.org/wp-content/uploads/2024/03/wpadyellow.png');background-repeat:repeat;text-decoration: none;font-size: 1rem;font-weight: bold;border: none;color: black;padding: .5rem 1rem;border-radius: 4px;cursor: pointer;">Add to Calendar</a>
+        </div>
+      </div>
+    </div>
+  </body>
+  `
+}
+
+router.get('/getCommunities', async (req, res) => {
+  try {
+    const data = await MinistryPlatformAPI.request('get', '/tables/WPAD_Communities', {"$filter":"ISNULL(End_Date, GETDATE()) >= GETDATE()"}, {});
+    res.send(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
+
+router.get('/getSchedules', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await MinistryPlatformAPI.request('get', '/tables/Prayer_Schedules', {"$select":"Prayer_Schedule_ID, Prayer_Schedules.[Start_Date], Prayer_Schedules.[End_Date], Prayer_Schedules.[WPAD_Community_ID], WPAD_Community_ID_Table.[Community_Name]","$filter":`Prayer_Schedules.[Start_Date] BETWEEN '${startDate}' AND '${endDate}' AND Cancelled=0`,"$orderby":"Start_Date"}, {});
+    res.send(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
+
+router.get('/getReservations', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await MinistryPlatformAPI.request('get', '/tables/WPAD_Community_Reservations', {"$select":"Reservation_Date, WPAD_Community_Reservations.WPAD_Community_ID, Community_Name","$filter":`Reservation_Date BETWEEN '${startDate}' AND '${endDate}' AND (WPAD_Community_ID_Table.[End_Date] IS NULL OR WPAD_Community_ID_Table.[End_Date] > GETDATE())`,"$orderby":"Reservation_Date","$distinct":"true"}, {});
+    res.send(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
 
 router.get('/mySchedules/:guid', async (req, res) => {
   try {
@@ -27,6 +82,49 @@ router.get('/championedDays/:id', async (req, res) => {
       {"$filter":`WPAD_Community_ID=${id} AND Reservation_Date >= GETDATE()`,"$orderby":"Reservation_Date"},
       {}
     );
+    res.send(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
+
+router.post('/PrayerSchedules', async (req, res) => {
+  try {
+    const data = await MinistryPlatformAPI.request('post', '/tables/Prayer_Schedules', {}, req.body);
+    res.send(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
+
+router.post('/ConfirmationEmail', async (req, res) => {
+  const {Email} = req.body;
+  try {
+    const msg = {
+      to: Email,
+      from: "noreply@pureheart.org",
+      subject: "We Pray All Day",
+      html: getWPADEmailTemplate(req.body)
+    };
+
+    const email = await sgMail
+      .send(msg)
+      .then(emailData => emailData);
+
+    res.status(200).send(email).end();
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
+
+router.get('/GenerateSequence', async (req, res) => {
+  const { Interval, StartDate, DayPosition, TotalOccurrences, Weekdays } = req.query;
+
+  try {
+    const data = await MinistryPlatformAPI.request('get', '/tasks/generate-sequence', {"$type":"Monthly","$interval":Interval,"$startDate":StartDate,"$totalOccurrences":TotalOccurrences,"$dayPosition":DayPosition,"$weekdays":Weekdays}, {});
     res.send(data);
   } catch (error) {
     console.log(error);

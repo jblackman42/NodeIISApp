@@ -13,6 +13,7 @@ const cookieParser = require('cookie-parser');
 
 // import local function
 const connectDB = require('./db/connect.js');
+const runScheduler = require('./db/wpad-notification-scheduler.js');
 const log = require('./middleware/logger.js');
 const setupLoggerMiddleware = require('./middleware/httpLogger.js');
 const setupSocketManager = require('./middleware/socketManager.js');
@@ -75,7 +76,8 @@ const port = process.env.PORT || 5000;
       server.listen(port, () => {
         log(`Server is listening on port ${port} - http://localhost:${port}`);
     });
-    await connectDB();    
+    await connectDB();
+    runScheduler();
   } catch (error) { console.log(error) }
 })();
 
