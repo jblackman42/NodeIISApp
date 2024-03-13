@@ -1,7 +1,7 @@
 var cron = require('node-cron');
 const MinistryPlatformAPI = require('ministry-platform-api-wrapper');
-const accountSid = 'AC550d1ac10822673a542346f335a290db';
-const authToken = '5811800cafbce5d45af9e3845f0194c9';
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
 
 const getPrayerSchedules = async () => await MinistryPlatformAPI.request('get', '/tables/Prayer_Schedules', {"$filter":"Start_Date > GETDATE() AND Start_Date < GETDATE()+7 AND ([5min_Reminder]=1 OR [1hr_Reminder]=1 OR [24hr_Reminder]=1 OR [3d_Reminder]=1 OR [7d_Reminder]=1)","$orderby":"Start_Date"}, {});
