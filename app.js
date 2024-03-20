@@ -11,6 +11,9 @@ const socketSingleton = require('./middleware/socketSingleton.js');
 var cors = require('cors');
 const cookieParser = require('cookie-parser');
 
+// setup functions
+require('dotenv').config();
+
 // import local function
 const connectDB = require('./db/connect.js');
 const runScheduler = require('./db/wpad-notification-scheduler.js');
@@ -23,15 +26,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketSingleton.init(server);
 
+setupLoggerMiddleware(app);
+setupSocketManager(io);
+
 // Express settings
 app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
-
-// setup functions
-require('dotenv').config();
-setupLoggerMiddleware(app);
-setupSocketManager(io)
-
 
 // Session middleware
 app.use(session({

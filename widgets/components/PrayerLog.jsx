@@ -6,6 +6,34 @@ import { FaTrash, FaMinus, FaFloppyDisk } from "react-icons/fa6";
 import { FaRegPenToSquare } from "react-icons/fa6";
 import { confirmAlert } from 'react-confirm-alert'; // https://www.npmjs.com/package/react-confirm-alert?activeTab=readme
 
+const formatDateString = (isoString) => {
+  const date = new Date(isoString);
+  const dateString = date.toLocaleDateString('en-us', {year: 'numeric', month: 'short', day: 'numeric'});
+  const timeString = date.toLocaleTimeString('en-us', {hour: 'numeric', minute: 'numeric'});
+  return `${dateString} - ${timeString}`
+}
+
+const updatePrayers = (updateData, requestURL) => {
+  const runUpdate = async () => {
+    return axios({
+      method:"PUT",
+      url:`${requestURL}/api/wpad/mySchedules/update`,
+      data: {
+        updateData: updateData,
+      }
+    }).then(response => {
+      if (response.data) {
+        const data = response.data
+        return data
+      }
+      throw new Error('No data');
+    }).catch(error => {
+      console.error("error", error);
+      throw error;
+    });
+  }
+  runUpdate()
+}
 
 const deletePrayerTime = ({prayerTime, prayerID, prayerGUID, requestURL, onDelete}) => {
   const runDelete = async () => {
@@ -43,27 +71,7 @@ const deletePrayerTime = ({prayerTime, prayerID, prayerGUID, requestURL, onDelet
     ]
   });
 }
-const updatePrayers = (updateData, requestURL) => {
-  const runUpdate = async () => {
-    return axios({
-      method:"PUT",
-      url:`${requestURL}/api/wpad/mySchedules/update`,
-      data: {
-        updateData: updateData,
-      }
-    }).then(response => {
-      if (response.data) {
-        const data = response.data
-        return data
-      }
-      throw new Error('No data');
-    }).catch(error => {
-      console.error("error", error);
-      throw error;
-    });
-  }
-  runUpdate()
-}
+
 
 const FuturePrayers = ({ columns, data, rowKeyField, requestURL, handleDelete, handleUpdate }) => {
   const [editingRowId, setEditingRowId] = useState(null);
@@ -71,7 +79,7 @@ const FuturePrayers = ({ columns, data, rowKeyField, requestURL, handleDelete, h
   const [currStartDate, setCurrStartDate] = useState();
   const [deleteOrCancel, setDeleteOrCancel] = useState('Delete');
   const [saveOrEdit, setSaveOrEdit] = useState('Edit')
-  const displayHeaders = JSON.parse(localStorage.getItem('DisplayPrayerHeaders'))
+  const displayHeaders = JSON.parse(localStorage.getItem('DisplayPrayerHeaders') ?? '[]');
 
   // console.log(editFormData)
   // console.log(editingRowId)
@@ -209,7 +217,7 @@ const FuturePrayers = ({ columns, data, rowKeyField, requestURL, handleDelete, h
   );
 };
 const PastPrayers = ({ columns, data, rowKeyField }) => {
-  const displayHeaders = JSON.parse(localStorage.getItem('DisplayPrayerHeaders'))
+  const displayHeaders = JSON.parse(localStorage.getItem('DisplayPrayerHeaders') ?? '[]')
   return (
     <div id='table-wrapper'>
       <table className='wpad-table'>
@@ -245,13 +253,6 @@ const PastPrayers = ({ columns, data, rowKeyField }) => {
     </div>
   );
 };
-
-const formatDateString = (isoString) => {
-  const date = new Date(isoString);
-  const dateString = date.toLocaleDateString('en-us', {year: 'numeric', month: 'short', day: 'numeric'});
-  const timeString = date.toLocaleTimeString('en-us', {hour: 'numeric', minute: 'numeric'});
-  return `${dateString} - ${timeString}`
-}
 
 const PrayerLog = ({ requestURL }) => {
   const UserGUID = '153606b5-aaf6-4ad2-84ad-643909e664fb';
