@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const CryptoJS = require('crypto-js');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -28,6 +29,12 @@ const getWPADEmailTemplate = ({First_Name, DateString, TimeString, Dates}) => {
     </div>
   </body>
   `
+};
+
+const hashPassword = (input) => {
+  let hash = CryptoJS.MD5(input);
+  let base64 = CryptoJS.enc.Base64.stringify(hash);
+  return base64;
 }
 
 router.get('/getCommunities', async (req, res) => {
@@ -149,6 +156,31 @@ router.get('/GenerateSequence', async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal server error");
+  }
+})
+
+router.post('/CommunityRegister', async (req, res) => {
+
+  try {
+    const { firstName, lastName, phone, email, communityName, address, city, state, postalCode, username, password } = req.body;
+    const formattedDate = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString();
+    
+    // check if community already exists
+    const matchingCommunity = await MinistryPlatformAPI.request('get', '/tables/WPAD_Communities', {"$select":"WPAD_Community_ID","$filter":`Community_Name='${communityName}'`}, {});
+    if (matchingCommunity && matchingCommunity.length > 0) {
+      return res.status(400).send("Community with this name already exists.");
+    }
+    // create community
+    const [community] = await MinistryPlatformAPI.request('post', '/tables/WPAD_Communities', {}, [{"Community_Name":communityName,"Address":address,"City":city,"State":state,"Zip":postalCode,"Start_Date":formattedDate}]);
+    console.log(community);
+    // find user
+    const [[user]] = await MinistryPlatformAPI.request('post', '/procs/api_WPAD_Force_New_Contact', {}, {"@FirstName": firstName,"@LastName": lastName,"@EmailAddress": email,"@PhoneNumber": phone,"@Username": username,"@Password": hashPassword(password),"@AddressLine1": address,"@City": city,"@State": state,"@PostalCode": postalCode});
+    console.log(user);
+    // make user authorized user for community
+    await MinistryPlatformAPI.request('post', '/tables/WPAD_Authorized_Users', {}, [{"WPAD_Community_ID": community.WPAD_Community_ID,"user_ID": user.User_Account}]);
+    res.sendStatus(200);
+  } catch (error) {
+    res.sendStatus(500);
   }
 })
 

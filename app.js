@@ -77,7 +77,7 @@ const port = process.env.PORT || 5000;
         log(`Server is listening on port ${port} - http://localhost:${port}`);
     });
     await connectDB();
-    runScheduler();
+    // runScheduler();
   } catch (error) { console.log(error) }
 })();
 
