@@ -20,11 +20,13 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@hapi/iron": "^7.0.1",
     "@sendgrid/mail": "^8.1.1",
     "axios": "^1.5.1",
     "child_process": "^1.0.2",
     "chokidar": "^3.5.3",
     "connect-flash": "^0.1.1",
+    "cookie": "^0.6.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -41,6 +43,8 @@
     "morgan": "^1.10.0",
     "node-cron": "^3.0.3",
     "nodemon": "^3.0.1",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
     "path": "^0.12.7",
     "qrcode": "^1.5.3",
     "react": "^18.2.0",

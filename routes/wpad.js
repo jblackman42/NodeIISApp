@@ -3,6 +3,9 @@ const router = express.Router();
 const CryptoJS = require('crypto-js');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const passport = require('passport');
+const { setLoginSession, getLoginSession, checkLoginSession, checkAuthorizedCommunity } = require('../lib/auth.js');
+const { removeTokenCookie  } = require('../lib/auth-cookie.js');
 
 const MinistryPlatformAPI = require('ministry-platform-api-wrapper');
 
@@ -36,6 +39,78 @@ const hashPassword = (input) => {
   let base64 = CryptoJS.enc.Base64.stringify(hash);
   return base64;
 }
+
+const authenticate = async (method, req, res) => {
+  new Promise((resolve, reject) => {
+    passport.authenticate(method, {}, (error, user) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(user);
+      }
+    })(req, res);
+  })
+}
+
+router.post('/login', async (req, res) => {
+  passport.authenticate('local', {}, (error, user) => {
+    if (error) {
+      // console.error(error);
+      return res.status(401).send(error.message);
+    }
+    
+    const session = { ...user };
+    setLoginSession(res, session)
+      .then(() => {
+        res.status(200).send("Login successful");
+      })
+  })(req, res);
+})
+
+router.post('/logout', (req, res) => {
+  try {
+    removeTokenCookie(res);
+    res.status(200).send("Logout successful");
+  } catch(err) {
+    res.status(500).send("Internal server error")
+  }
+})
+
+router.get('/user', async (req, res) => {
+  try {
+    const session = await getLoginSession(req);
+    const user = session ?? null;
+
+    res.status(200).json({ ...user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).end("Authentication token is invalid, please log in");
+  }
+})
+
+router.get('/myCommunity', checkLoginSession, async (req, res) => {
+  
+  // res.send(user);
+  try {
+    const user = await getLoginSession(req);
+    const data = await MinistryPlatformAPI.request('get', '/tables/WPAD_Authorized_Users', {"$select":"WPAD_Community_ID_Table.[WPAD_Community_ID], WPAD_Community_ID_Table.[Community_Name], WPAD_Community_ID_Table.[Address], WPAD_Community_ID_Table.[City], WPAD_Community_ID_Table.[State], WPAD_Community_ID_Table.[Zip], WPAD_Community_ID_Table.[Start_Date], WPAD_Community_ID_Table.[Reminder_Text]","$filter":`user_ID=${user.User_ID} AND (WPAD_Community_ID_Table.[End_Date] IS NULL OR GETDATE() > WPAD_Community_ID_Table.[End_Date])`}, {})
+    res.send(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
+
+router.get('/communityPrayers/:id', checkAuthorizedCommunity, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await MinistryPlatformAPI.request('post', '/tables/Prayer_Schedules/get', {}, {"Filter":`Cancelled=0 AND WPAD_Community_ID=${id}`});
+    res.send(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
+})
 
 router.get('/getCommunities', async (req, res) => {
   try {
@@ -172,10 +247,10 @@ router.post('/CommunityRegister', async (req, res) => {
     }
     // create community
     const [community] = await MinistryPlatformAPI.request('post', '/tables/WPAD_Communities', {}, [{"Community_Name":communityName,"Address":address,"City":city,"State":state,"Zip":postalCode,"Start_Date":formattedDate}]);
-    console.log(community);
+    // console.log(community);
     // find user
     const [[user]] = await MinistryPlatformAPI.request('post', '/procs/api_WPAD_Force_New_Contact', {}, {"@FirstName": firstName,"@LastName": lastName,"@EmailAddress": email,"@PhoneNumber": phone,"@Username": username,"@Password": hashPassword(password),"@AddressLine1": address,"@City": city,"@State": state,"@PostalCode": postalCode});
-    console.log(user);
+    // console.log(user);
     // make user authorized user for community
     await MinistryPlatformAPI.request('post', '/tables/WPAD_Authorized_Users', {}, [{"WPAD_Community_ID": community.WPAD_Community_ID,"user_ID": user.User_Account}]);
     res.sendStatus(200);

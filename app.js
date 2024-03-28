@@ -1,9 +1,7 @@
 // import dependencies
 const express = require('express');
 const session = require('express-session');
-const morgan = require('morgan');
-const fs = require('fs');
-const path = require('path');
+const passport = require('passport');
 const http = require('http');
 // const socketIo = require('socket.io');
 const flash = require('connect-flash');
@@ -13,6 +11,7 @@ const cookieParser = require('cookie-parser');
 
 // setup functions
 require('dotenv').config();
+require('./middleware/passport.js')(passport);
 
 // import local function
 const connectDB = require('./db/connect.js');
@@ -40,12 +39,18 @@ app.use(session({
   saveUninitialized: true,
   cookie: { secure: process.env.SESSION_SECRET === 'production', maxAge: 1000 * 60 * 60 * 24 }
 }));
+const corsOptions = { 
+  origin: true,
+  credentials: true,
+}; 
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(cookieParser());
 // Package size middleware
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb', extended: true}));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(flash());
 
 // Static file routes
