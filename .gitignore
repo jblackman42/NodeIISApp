@@ -1,6 +1,6 @@
 aspnet_client
 iisnode
-logs
+logs/access.log
 node_modules
 .env
 web.config

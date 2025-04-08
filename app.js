@@ -75,7 +75,7 @@ app.use('/api/wpad', require('./routes/wpad.js'));
 app.use('/', require('./routes/index'));
 
 // Start the server
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 (async () => {
   try {
       server.listen(port, () => {
